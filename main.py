@@ -11,7 +11,7 @@ async def getOptimalTeam():
     session = aiohttp.ClientSession()
     fpl = FPL(session)
     print("Loading all players for fixtures")
-    fixtures = await fpl.get_fixtures_by_gameweek(23)
+    fixtures = await fpl.get_fixtures_by_gameweek(25)
     scoresDict = {}
     # print("Obtaining FDR")
     # try :
@@ -44,11 +44,11 @@ async def getOptimalTeam():
             score *= (1 / fixture.team_h_difficulty)
             scoresDict[player.id] = score
 
-    # scores = pd.Series(scoresDict)
-    # print("Getting Best Player")
-    # idBP = scores.idxmax()
-    # bestPlayer = await fpl.get_player(idBP)
-    # print(bestPlayer.web_name)
+    scores = pd.Series(scoresDict)
+    print("Getting Best Player")
+    idBP = scores.idxmax()
+    bestPlayer = await fpl.get_player(idBP)
+    print(bestPlayer.web_name)
     await session.close()
 
 asyncio.run(getOptimalTeam())
