@@ -3,7 +3,7 @@
 
 
 ## Usage
-`git clone https://github.com/aaronayalew/fplmagic`
-`cd fplmagic`
-`python -m main.py`
+`git clone https://github.com/aaronayalew/fplmagic`<br>
+`cd fplmagic`<br>
+`python -m main.py`<br>
 
