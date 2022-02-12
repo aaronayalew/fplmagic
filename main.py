@@ -1,32 +1,32 @@
 from time import sleep
 import asyncio
+import sys
 
 from fpl import FPL
 import aiohttp
 import numpy as np
 import pandas as pd
 
+def searchPlayer(players, id):
+    for player in players:
+        if player.id == id: 
+            return player
+
 async def getOptimalTeam():
-    print("Loading fixtures...")
+    sys.stdout.write("\rCreating session...") #TODO: Beautify console output 
     session = aiohttp.ClientSession()
     fpl = FPL(session)
-    print("Loading all players for fixtures")
+    sys.stdout.flush
+    sys.stdout.write("\rLoading all players and fixtures...")
+    players = await fpl.get_players()
     fixtures = await fpl.get_fixtures_by_gameweek(25)
     scoresDict = {}
-    # print("Obtaining FDR")
-    # try :
-    #     fdr = await fpl.FDR()
-    # except OSError:
-    #     print("Timeout retrying ...")
-    #     fdr = await fpl.FDR() 
-    print("Going through the players...")
+    sys.stdout.flush
+    sys.stdout.write("\rGoing through the players and fixtures...") 
     for fixture in fixtures :
-        print(fixture)
-        teamH = await fpl.get_team(fixture.team_h)
-        teamA = await fpl.get_team(fixture.team_a)
-        playersH = await teamH.get_players()
-        playersA = await teamA.get_players()
-        
+        sys.stdout.write("\r{0}".format(fixture))
+        playersH = filter(lambda player: player.team == fixture.team_h, players)
+        playersA = filter(lambda player: player.team == fixture.team_a, players)        
         for player in playersH:
             score = 0.0
             score += float(player.ict_index)
@@ -40,15 +40,16 @@ async def getOptimalTeam():
             score += float(player.ict_index)
             score += float(player.goals_scored) * 100
             score += float(player.assists)* 80
-            score += float(player.points_per_game)
+            score *= float(player.points_per_game)
             score *= (1 / fixture.team_h_difficulty)
             scoresDict[player.id] = score
 
     scores = pd.Series(scoresDict)
-    print("Getting Best Player")
-    idBP = scores.idxmax()
-    bestPlayer = await fpl.get_player(idBP)
-    print(bestPlayer.web_name)
+    bestxindex = scores.nlargest(11)
+    bestxi = [searchPlayer(players, id) for id in bestxindex.index.tolist()]
+    sys.stdout.flush()
+    print("\r")
+    print(*bestxi, sep="\n")
     await session.close()
 
 asyncio.run(getOptimalTeam())
